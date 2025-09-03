@@ -18,67 +18,42 @@ pub enum Proposition {
 	Not(Rc<Proposition>),
 }
 
-impl Proposition {
-	fn precedence(&self) -> i8 {
-		match self {
-			Proposition::Variable(_) => 4,
-			Proposition::Not(_) => 3,
-			Proposition::And { .. } => 2,
-			Proposition::Or { .. } => 1,
-			Proposition::Implies { .. } => 0,
-		}
-	}
-}
-
 impl fmt::Display for Proposition {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		fn fmt_with_prec(
-			p: &Proposition,
-			parent_prec: i8,
-			f: &mut fmt::Formatter<'_>,
-		) -> fmt::Result {
-			let prec = p.precedence();
-			let needs_parens = prec < parent_prec;
-
-			if needs_parens {
-				write!(f, "(")?;
-			}
-
+		fn maybe_wrapped(p: &Proposition, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 			match p {
-				Proposition::Variable(v) => write!(f, "{}", (*v + b'a') as char)?,
-
-				Proposition::Not(inner) => {
-					write!(f, "¬")?;
-					fmt_with_prec(inner, prec, f)?;
+				x @ (Proposition::Variable(_) | Proposition::Not(Proposition::Variable(_))) => {
+					write!(f, "{x}")
 				}
-
-				Proposition::And { left, right } => {
-					fmt_with_prec(left, prec, f)?;
-					write!(f, " ∧ ")?;
-					fmt_with_prec(right, prec, f)?;
-				}
-
-				Proposition::Or { left, right } => {
-					fmt_with_prec(left, prec, f)?;
-					write!(f, " ∨ ")?;
-					fmt_with_prec(right, prec, f)?;
-				}
-
-				Proposition::Implies { left, right } => {
-					fmt_with_prec(left, prec, f)?;
-					write!(f, " → ")?;
-					// right-associative: make the right child bind *tighter*
-					fmt_with_prec(right, prec - 1, f)?;
-				}
+				_ => write!(f, "({p})"),
 			}
-
-			if needs_parens {
-				write!(f, ")")?;
-			}
-			Ok(())
 		}
 
-		fmt_with_prec(self, 0, f)
+		match self {
+			Proposition::Variable(v) => write!(f, "{}", (*v + b'a') as char),
+
+			Proposition::Not(inner) => {
+				write!(f, "¬")?;
+				maybe_wrapped(inner, f)
+			}
+
+			Proposition::And { left, right } => {
+				maybe_wrapped(left, f)?;
+				write!(f, " ∧ ")?;
+				maybe_wrapped(right, f)
+			}
+
+			Proposition::Or { left, right } => {
+				maybe_wrapped(left, f)?;
+				write!(f, " ∨ ")?;
+				maybe_wrapped(right, f)
+			}
+
+			Proposition::Implies { left, right } => {
+				maybe_wrapped(left, f)?;
+				write!(f, " → ")?;
+				maybe_wrapped(right, f)
+			}
+		}
 	}
 }
-
