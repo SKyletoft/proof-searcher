@@ -1,9 +1,9 @@
 #![feature(deref_patterns)]
 
 mod prop;
-use prop::Proposition::{self, *};
-
 use std::{collections::HashSet, rc::Rc};
+
+use prop::Proposition::{self, *};
 
 fn main() {
 	// Target:
