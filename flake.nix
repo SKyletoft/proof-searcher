@@ -12,7 +12,7 @@
 					inherit system;
 					overlays = [ (import rust-overlay) ];
 				};
-				toolchain = pkgs.rust-bin.stable.latest.default;
+				toolchain = pkgs.rust-bin.nightly.latest.default;
 			in {
 				packages.default = (pkgs.makeRustPlatform {
 					cargo = toolchain;
