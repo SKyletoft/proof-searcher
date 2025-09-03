@@ -183,5 +183,11 @@ fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 		out.insert(x.clone());
 	}
 
+	if let Implies {
+		left, right: Bottom,
+	} = prop {
+		out.insert(Rc::new(Not(left.clone())));
+	}
+
 	out
 }
