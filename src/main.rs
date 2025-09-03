@@ -120,9 +120,6 @@ fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 	if let Not(Not(x)) = prop {
 		out.insert(x.clone());
 	}
-	if let Not(_) = prop {
-		todo!()
-	}
 
 	out
 }
