@@ -1,5 +1,4 @@
-use std::fmt;
-use std::rc::Rc;
+use std::{fmt, rc::Rc};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Proposition {
