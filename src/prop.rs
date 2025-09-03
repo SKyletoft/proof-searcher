@@ -16,13 +16,14 @@ pub enum Proposition {
 		right: Rc<Proposition>,
 	},
 	Not(Rc<Proposition>),
+	Bottom,
 }
 
 impl fmt::Display for Proposition {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		fn maybe_wrapped(p: &Proposition, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 			match p {
-				x @ (Proposition::Variable(_) | Proposition::Not(Proposition::Variable(_))) => {
+				x @ (Proposition::Bottom | Proposition::Variable(_) | Proposition::Not(Proposition::Variable(_))) => {
 					write!(f, "{x}")
 				}
 				_ => write!(f, "({p})"),
@@ -30,6 +31,8 @@ impl fmt::Display for Proposition {
 		}
 
 		match self {
+			Proposition::Bottom => write!(f, "⊥"),
+
 			Proposition::Variable(v) => write!(f, "{}", (*v + b'a') as char),
 
 			Proposition::Not(inner) => {
