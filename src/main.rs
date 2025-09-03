@@ -26,6 +26,7 @@ fn main() {
 			left: Not(var('s')).into(),
 			right: Not(var('q')).into(),
 		},
+		(*var(')).clone(),
 	]
 	.into_iter()
 	.map(Rc::new)
@@ -38,9 +39,15 @@ fn main() {
 
 	set1 = deduce(set1);
 
+	let cands = assumption_candidates(&set1);
+
 	println!("{}", set1.len());
 	println!("{}", set1.contains(&target));
 	for prop in set1.into_iter() {
+		println!("{prop}");
+	}
+	println!("-----------------");
+	for prop in cands.into_iter() {
 		println!("{prop}");
 	}
 }
