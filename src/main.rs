@@ -71,6 +71,36 @@ fn deduce(facts: HashSet<Rc<Proposition>>) -> HashSet<Rc<Proposition>> {
 	set2
 }
 
+fn assumption_candidates(facts: &HashSet<Rc<Proposition>>) -> HashSet<Rc<Proposition>> {
+	let mut out = HashSet::new();
+
+	fn recurse(
+		cand: Rc<Proposition>,
+		facts: &HashSet<Rc<Proposition>>,
+		out: &mut HashSet<Rc<Proposition>>,
+	) {
+		if !facts.contains(&cand) {
+			out.insert(cand.clone());
+		}
+		match &cand {
+			And { left, right } | Or { left, right } | Implies { left, right } => {
+				recurse(left.clone(), facts, out);
+				recurse(right.clone(), facts, out);
+			}
+			Not(inner) => {
+				recurse(inner.clone(), facts, out);
+			}
+			_ => {}
+		}
+	}
+
+	for fact in facts.iter().cloned() {
+		recurse(fact, facts, &mut out);
+	}
+
+	out
+}
+
 // Just check against every known rule and collect all conclusions.
 fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 	let mut out = HashSet::new();
