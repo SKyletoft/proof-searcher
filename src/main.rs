@@ -149,6 +149,29 @@ fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 		out.insert(left.clone());
 		out.insert(right.clone());
 	}
+
+	if let And {
+		left: x,
+		right: Implies { left: y, right: z },
+	} = prop
+		&& x == y
+	{
+		out.insert(z.clone());
+	}
+
+	// Is this ok as one step?
+	if let And {
+		left: x,
+		right: Or {
+			left: y,
+			right: Not(z),
+		},
+	} = prop
+		&& x == z
+	{
+		out.insert(y.clone());
+	}
+
 	if let Not(Not(x)) = prop {
 		out.insert(x.clone());
 	}
