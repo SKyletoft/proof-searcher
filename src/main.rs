@@ -26,7 +26,7 @@ fn main() {
 			left: Not(var('s')).into(),
 			right: Not(var('q')).into(),
 		},
-		(*var(')).clone(),
+		(*var('s')).clone(),
 	]
 	.into_iter()
 	.map(Rc::new)
