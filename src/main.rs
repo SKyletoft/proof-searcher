@@ -5,6 +5,8 @@ use std::{collections::HashSet, rc::Rc};
 
 use prop::Proposition::{self, *};
 
+type Propositions = HashSet<Rc<Proposition>>;
+
 fn main() {
 	// Target:
 	// ¬s → ¬r, (p ∧ q) ∨ r, ¬s → ¬q |- ¬p ∨ s
@@ -50,6 +52,13 @@ fn main() {
 	for prop in cands.into_iter() {
 		println!("{prop}");
 	}
+}
+
+// We're doing a BFS-ish. Each node in the graph is a set of propositions and when we visit it we
+// also deduce everything we can. Each edge is an assumption or a conclusion from an assumption.
+// We visit assumptions in a simplest first order and conclusions before new assumptions.
+fn proof_search(premises: Propositions, target: Proposition) {
+
 }
 
 fn var(c: char) -> Rc<Proposition> {
