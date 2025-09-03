@@ -9,7 +9,7 @@ fn main() {
 	// Target:
 	// ¬s → ¬r, (p ∧ q) ∨ r, ¬s → ¬q |- ¬p ∨ s
 
-	let set1 = [
+	let mut set1 = [
 		Implies {
 			left: Not(var('s')).into(),
 			right: Not(var('r')).into(),
@@ -35,6 +35,8 @@ fn main() {
 		left: Rc::new(Not(var('p'))),
 		right: var('s'),
 	};
+
+	set1 = deduce(set1);
 
 	println!("{}", set1.len());
 	println!("{}", set1.contains(&target));
