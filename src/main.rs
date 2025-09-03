@@ -47,6 +47,28 @@ fn var(c: char) -> Rc<Proposition> {
 	Rc::new(Variable(c as u8 - b'a'))
 }
 
+fn deduce(facts: HashSet<Rc<Proposition>>) -> HashSet<Rc<Proposition>> {
+	let mut set1;
+	let mut set2 = facts;
+
+	loop {
+		let fact_count = set2.len();
+		set1 = set2;
+		set2 = HashSet::new();
+		for prop in set1.into_iter() {
+			for new_prop in single_prop_conclusions(&prop) {
+				set2.insert(new_prop);
+			}
+			set2.insert(prop);
+		}
+		if set2.len() == fact_count {
+			break;
+		}
+	}
+
+	set2
+}
+
 // Just check against every known rule and collect all conclusions.
 fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 	let mut out = HashSet::new();
