@@ -129,6 +129,25 @@ fn assumption_candidates(facts: &HashSet<Rc<Proposition>>) -> Vec<Rc<Proposition
 	v
 }
 
+fn conclusion_candidates(node: &SearchNode) -> Option<(Rc<Proposition>, Vec<Rc<Proposition>>)> {
+	let (assumption, conclusions) = node.assumptions.last()?;
+
+	let mut v = conclusions
+		.iter()
+		.filter(|c| {
+			let c: &Proposition = c;
+			!node.premises.contains(c)
+				&& !node.assumptions[..node.assumptions.len() - 1]
+					.iter()
+					.any(|(_, props)| props.contains(c))
+		})
+		.cloned()
+		.collect::<Vec<Rc<Proposition>>>();
+	v.sort_unstable_by_key(|p| p.len());
+
+	Some((assumption.clone(), v))
+}
+
 // Just check against every known rule and collect all conclusions.
 fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 	let mut out = HashSet::new();
