@@ -121,6 +121,7 @@ fn assumption_candidates(facts: &HashSet<Rc<Proposition>>) -> HashSet<Rc<Proposi
 fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 	let mut out = HashSet::new();
 
+	// Rebalancing
 	if let And {
 		left: And { left: x, right: y },
 		right: z,
@@ -134,10 +135,18 @@ fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 			}),
 		}));
 	}
-	if let And { left, right } = prop {
+
+	if let And {
+		left: x,
+		right: And { left: y, right: z },
+	} = prop
+	{
 		out.insert(Rc::new(And {
-			left: right.clone(),
-			right: left.clone(),
+			left: Rc::new(And {
+				left: x.clone(),
+				right: y.clone(),
+			}),
+			right: z.clone(),
 		}));
 	}
 
@@ -154,6 +163,32 @@ fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 			}),
 		}));
 	}
+
+	if let Or {
+		left: x,
+		right: Or { left: y, right: z },
+	} = prop
+	{
+		out.insert(Rc::new(Or {
+			left: Rc::new(Or {
+				left: x.clone(),
+				right: y.clone(),
+			}),
+			right: z.clone(),
+		}));
+	}
+
+	// And-elimination + And-reordering
+	if let And { left, right } = prop {
+		out.insert(Rc::new(And {
+			left: right.clone(),
+			right: left.clone(),
+		}));
+		out.insert(left.clone());
+		out.insert(right.clone());
+	}
+
+	// Or-reordering
 	if let Or { left, right } = prop {
 		out.insert(Rc::new(Or {
 			left: right.clone(),
@@ -161,11 +196,7 @@ fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 		}));
 	}
 
-	if let And { left, right } = prop {
-		out.insert(left.clone());
-		out.insert(right.clone());
-	}
-
+	// Implication-elimination
 	if let And {
 		left: x,
 		right: Implies { left: y, right: z },
@@ -175,27 +206,42 @@ fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 		out.insert(z.clone());
 	}
 
-	// Is this ok as one step?
-	if let And {
-		left: x,
-		right: Or {
-			left: y,
-			right: Not(z),
-		},
-	} = prop
-		&& x == z
-	{
-		out.insert(y.clone());
-	}
-
+	// Double negation elimination
 	if let Not(Not(x)) = prop {
 		out.insert(x.clone());
 	}
 
+	// if !matches!(prop, Not(_)) {
+	//	out.insert(Rc::new(Not(Rc::new(Not(Rc::new(prop.clone()))))));
+	// }
+
+	// Proof by contradiction
 	if let Implies {
-		left, right: Bottom,
-	} = prop {
+		left,
+		right: Bottom,
+	} = prop
+	{
 		out.insert(Rc::new(Not(left.clone())));
+	}
+
+	// MT
+	if let And {
+		left: Implies { left: x, right: y },
+		right: Not(z),
+	} = prop
+		&& z == y
+	{
+		out.insert(Rc::new(Not(x.clone())));
+	}
+
+	// Not-elimination
+	if let And {
+		left,
+		right: Not(x),
+	} = prop
+		&& left == x
+	{
+		out.insert(Rc::new(Bottom));
 	}
 
 	out
