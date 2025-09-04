@@ -32,7 +32,6 @@ fn main() {
 			left: Not(var('s')).into(),
 			right: Not(var('q')).into(),
 		},
-		(*var('s')).clone(),
 	]
 	.into_iter()
 	.map(Rc::new)
@@ -43,7 +42,8 @@ fn main() {
 		right: var('s'),
 	};
 
-	set1 = deduce(set1);
+	let result = proof_search(set1, target);
+}
 
 #[derive(Clone)]
 struct SearchNode {
@@ -51,16 +51,53 @@ struct SearchNode {
 	assumptions: Vec<(Rc<Proposition>, Propositions)>,
 }
 
-	let cands = assumption_candidates(&set1);
+impl fmt::Display for SearchNode {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		writeln!(f, "{{\n\tpremises:")?;
+		for premise in self.premises.iter() {
+			writeln!(f, "\t\t{premise}")?;
+		}
+		writeln!(f, "\tassumptions:")?;
+		for (assumption, new_conclusions) in self.assumptions.iter() {
+			writeln!(f, "\t\t{assumption}:")?;
+			for new_conclusion in new_conclusions.iter() {
+				writeln!(f, "\t\t\t{new_conclusion}")?;
+			}
+		}
+		writeln!(f, "}}")?;
 
-	println!("{}", set1.len());
-	println!("{}", set1.contains(&target));
-	for prop in set1.into_iter() {
-		println!("{prop}");
+		Ok(())
 	}
-	println!("-----------------");
-	for prop in cands.into_iter() {
-		println!("{prop}");
+}
+
+impl SearchNode {
+	fn last(&self) -> &Propositions {
+		self.assumptions
+			.last()
+			.map(|(_, x)| x)
+			.unwrap_or(&self.premises)
+	}
+
+	fn last_mut(&mut self) -> &mut Propositions {
+		self.assumptions
+			.last_mut()
+			.map(|(_, x)| x)
+			.unwrap_or(&mut self.premises)
+	}
+
+	fn contains_except_last(&self, prop: &Proposition) -> bool {
+		!self.premises.contains(prop)
+			&& !self.assumptions[..self.assumptions.len() - 1]
+				.iter()
+				.any(|(_, props)| props.contains(prop))
+	}
+
+	fn contains(&self, prop: &Proposition) -> bool {
+		!self.premises.contains(prop)
+			&& !self
+				.assumptions
+				.iter()
+				.any(|(_, props)| props.contains(prop))
 	}
 }
 
@@ -68,14 +105,87 @@ struct SearchNode {
 // also deduce everything we can. Each edge is an assumption or a conclusion from an assumption.
 // We visit assumptions in a simplest first order and conclusions before new assumptions.
 fn proof_search(premises: Propositions, target: Proposition) {
+	let mut queue = VecDeque::new();
 
+	let premises = deduce(premises);
+	let cands = assumption_candidates(&premises);
+	for cand in cands.into_iter() {
+		let premises = premises.clone();
+		queue.push_back(SearchNode {
+			premises,
+			assumptions: vec![(cand, HashSet::new())],
+		});
+	}
+
+	while let Some(mut node) = queue.pop_front() {
+		eprintln!("{node}");
+
+		if node.assumptions.len() >= 3 {
+			continue;
+		}
+		if node.premises.contains(&target) {
+			println!("{node}");
+			break;
+		}
+
+		if let Some((assumption, c_cands)) = conclusion_candidates(&node) {
+			let mut new = node.clone();
+			new.assumptions.pop();
+			for cand in c_cands.into_iter() {
+				let mut node = new.clone();
+				let props = node
+					.assumptions
+					.last_mut()
+					.map(|(_, x)| x)
+					.unwrap_or(&mut node.premises);
+				props.insert(Rc::new(Implies {
+					left: assumption.clone(),
+					right: cand,
+				}));
+			}
+		}
+
+		join(&mut node);
+		deduce(&mut node);
+		let a_cands = assumption_candidates(last);
+		for cand in a_cands.into_iter() {
+			let premises = premises.clone();
+			let mut assumptions = node.assumptions.clone();
+			assumptions.push((cand, HashSet::new()));
+			queue.push_back(SearchNode {
+				premises,
+				assumptions,
+			});
+		}
+	}
 }
 
 fn var(c: char) -> Rc<Proposition> {
 	Rc::new(Variable(c as u8 - b'a'))
 }
 
-fn deduce(facts: HashSet<Rc<Proposition>>) -> HashSet<Rc<Proposition>> {
+fn join(node: &mut SearchNode) -> &mut Propositions {
+	if node.assumptions.is_empty() {
+		return &mut node.premises;
+	}
+	let mid = node.assumptions.len() - 1;
+	let (generations, [(new_assumption, last)]) = node.assumptions.split_at_mut(mid) else {
+		unreachable!()
+	};
+	for known in node
+		.premises
+		.iter()
+		.chain(generations.iter().flat_map(|(_, facts)| facts.iter()))
+	{
+		last.insert(Rc::new(And {
+			left: new_assumption.clone(),
+			right: known.clone(),
+		}));
+	}
+	last
+}
+
+fn deduce(node: &mut SearchNode) {
 	let mut set1;
 	let mut set2 = facts;
 
