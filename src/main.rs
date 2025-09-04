@@ -45,6 +45,12 @@ fn main() {
 
 	set1 = deduce(set1);
 
+#[derive(Clone)]
+struct SearchNode {
+	premises: Propositions,
+	assumptions: Vec<(Rc<Proposition>, Propositions)>,
+}
+
 	let cands = assumption_candidates(&set1);
 
 	println!("{}", set1.len());
