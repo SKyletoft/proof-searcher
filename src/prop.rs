@@ -19,6 +19,20 @@ pub enum Proposition {
 	Bottom,
 }
 
+impl Proposition {
+	pub fn len(&self) -> usize {
+		match self {
+			Proposition::Bottom => 0,
+			Proposition::Variable(_) => 1,
+			Proposition::Not(Proposition::Not(proposition)) => 3 + proposition.len(),
+			Proposition::Not(proposition) => 1 + proposition.len(),
+			Proposition::And { left, right }
+			| Proposition::Or { left, right }
+			| Proposition::Implies { left, right } => 1 + left.len() + right.len(),
+		}
+	}
+}
+
 impl fmt::Display for Proposition {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		fn maybe_wrapped(p: &Proposition, f: &mut fmt::Formatter<'_>) -> fmt::Result {
