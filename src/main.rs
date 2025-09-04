@@ -97,7 +97,7 @@ fn deduce(facts: HashSet<Rc<Proposition>>) -> HashSet<Rc<Proposition>> {
 	set2
 }
 
-fn assumption_candidates(facts: &HashSet<Rc<Proposition>>) -> HashSet<Rc<Proposition>> {
+fn assumption_candidates(facts: &HashSet<Rc<Proposition>>) -> Vec<Rc<Proposition>> {
 	let mut out = HashSet::new();
 
 	fn recurse(
@@ -124,7 +124,9 @@ fn assumption_candidates(facts: &HashSet<Rc<Proposition>>) -> HashSet<Rc<Proposi
 		recurse(fact, facts, &mut out);
 	}
 
-	out
+	let mut v = out.into_iter().collect::<Vec<Rc<Proposition>>>();
+	v.sort_unstable_by_key(|p| p.len());
+	v
 }
 
 // Just check against every known rule and collect all conclusions.
