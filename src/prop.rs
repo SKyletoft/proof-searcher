@@ -23,7 +23,10 @@ impl fmt::Display for Proposition {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		fn maybe_wrapped(p: &Proposition, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 			match p {
-				x @ (Proposition::Bottom | Proposition::Variable(_) | Proposition::Not(Proposition::Variable(_))) => {
+				x @ (Proposition::Bottom
+				| Proposition::Variable(_)
+				| Proposition::Not(Proposition::Not(Proposition::Variable(_)))
+				| Proposition::Not(Proposition::Variable(_))) => {
 					write!(f, "{x}")
 				}
 				_ => write!(f, "({p})"),
