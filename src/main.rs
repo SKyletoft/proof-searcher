@@ -1,7 +1,11 @@
 #![feature(deref_patterns)]
 
 mod prop;
-use std::{collections::HashSet, rc::Rc};
+use std::{
+	collections::{HashSet, VecDeque},
+	fmt,
+	rc::Rc,
+};
 
 use prop::Proposition::{self, *};
 
