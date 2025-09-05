@@ -43,13 +43,28 @@ fn main() {
 		right: var('s'),
 	};
 
-	let result = proof_search(set1, target);
+	proof_search(set1, target)
+}
+
+#[derive(Clone)]
+struct Hypothesis {
+	assumption: Rc<Proposition>,
+	conclusions: Propositions,
+}
+
+impl Hypothesis {
+	fn from_assumption(assumption: Rc<Proposition>) -> Self {
+		Hypothesis {
+			assumption,
+			conclusions: HashSet::new(),
+		}
+	}
 }
 
 #[derive(Clone)]
 struct SearchNode {
 	premises: Propositions,
-	assumptions: Vec<(Rc<Proposition>, Propositions)>,
+	assumptions: Vec<Hypothesis>,
 }
 
 impl fmt::Display for SearchNode {
@@ -59,9 +74,13 @@ impl fmt::Display for SearchNode {
 			writeln!(f, "\t\t{premise}")?;
 		}
 		writeln!(f, "\tassumptions:")?;
-		for (assumption, new_conclusions) in self.assumptions.iter() {
+		for Hypothesis {
+			assumption,
+			conclusions,
+		} in self.assumptions.iter()
+		{
 			writeln!(f, "\t\t{assumption}:")?;
-			for new_conclusion in new_conclusions.iter() {
+			for new_conclusion in conclusions.iter() {
 				writeln!(f, "\t\t\t{new_conclusion}")?;
 			}
 		}
@@ -75,14 +94,14 @@ impl SearchNode {
 	fn last(&self) -> &Propositions {
 		self.assumptions
 			.last()
-			.map(|(_, x)| x)
+			.map(|Hypothesis { conclusions, .. }| conclusions)
 			.unwrap_or(&self.premises)
 	}
 
 	fn last_mut(&mut self) -> &mut Propositions {
 		self.assumptions
 			.last_mut()
-			.map(|(_, x)| x)
+			.map(|Hypothesis { conclusions, .. }| conclusions)
 			.unwrap_or(&mut self.premises)
 	}
 
@@ -90,7 +109,7 @@ impl SearchNode {
 		!self.premises.contains(prop)
 			&& !self.assumptions[..self.assumptions.len() - 1]
 				.iter()
-				.any(|(_, props)| props.contains(prop))
+				.any(|Hypothesis { conclusions, .. }| conclusions.contains(prop))
 	}
 
 	fn contains(&self, prop: &Proposition) -> bool {
@@ -98,7 +117,7 @@ impl SearchNode {
 			&& !self
 				.assumptions
 				.iter()
-				.any(|(_, props)| props.contains(prop))
+				.any(|Hypothesis { conclusions, .. }| conclusions.contains(prop))
 	}
 }
 
@@ -118,7 +137,7 @@ fn proof_search(premises: Propositions, target: Proposition) {
 		let premises = starting_node.premises.clone();
 		queue.push_back(SearchNode {
 			premises,
-			assumptions: vec![(cand, HashSet::new())],
+			assumptions: vec![Hypothesis::from_assumption(cand)],
 		});
 	}
 
@@ -141,7 +160,7 @@ fn proof_search(premises: Propositions, target: Proposition) {
 				let props = node
 					.assumptions
 					.last_mut()
-					.map(|(_, x)| x)
+					.map(|Hypothesis {conclusions, ..}| conclusions)
 					.unwrap_or(&mut node.premises);
 				props.insert(Rc::new(Implies {
 					left: assumption.clone(),
@@ -157,7 +176,7 @@ fn proof_search(premises: Propositions, target: Proposition) {
 		for cand in a_cands.into_iter() {
 			let premises = node.premises.clone();
 			let mut assumptions = node.assumptions.clone();
-			assumptions.push((cand, HashSet::new()));
+			assumptions.push(Hypothesis::from_assumption(cand));
 			queue.push_back(SearchNode {
 				premises,
 				assumptions,
@@ -175,14 +194,23 @@ fn join(node: &mut SearchNode) -> &mut Propositions {
 		return &mut node.premises;
 	}
 	let mid = node.assumptions.len() - 1;
-	let (generations, [(new_assumption, last)]) = node.assumptions.split_at_mut(mid) else {
+	let (
+		generations,
+		[
+			Hypothesis {
+				assumption: new_assumption,
+				conclusions: last,
+			},
+		],
+	) = node.assumptions.split_at_mut(mid)
+	else {
 		unreachable!()
 	};
-	for known in node
-		.premises
-		.iter()
-		.chain(generations.iter().flat_map(|(_, facts)| facts.iter()))
-	{
+	for known in node.premises.iter().chain(
+		generations
+			.iter()
+			.flat_map(|Hypothesis { conclusions, .. }| conclusions.iter()),
+	) {
 		last.insert(Rc::new(And {
 			left: new_assumption.clone(),
 			right: known.clone(),
@@ -249,7 +277,10 @@ fn assumption_candidates(facts: &HashSet<Rc<Proposition>>) -> Vec<Rc<Proposition
 }
 
 fn conclusion_candidates(node: &SearchNode) -> Option<(Rc<Proposition>, Vec<Rc<Proposition>>)> {
-	let (assumption, conclusions) = node.assumptions.last()?;
+	let Hypothesis {
+		assumption,
+		conclusions,
+	} = node.assumptions.last()?;
 
 	let mut v = conclusions
 		.iter()
@@ -258,7 +289,7 @@ fn conclusion_candidates(node: &SearchNode) -> Option<(Rc<Proposition>, Vec<Rc<P
 			!node.premises.contains(c)
 				&& !node.assumptions[..node.assumptions.len() - 1]
 					.iter()
-					.any(|(_, props)| props.contains(c))
+					.any(|Hypothesis { conclusions, .. }| conclusions.contains(c))
 		})
 		.cloned()
 		.collect::<Vec<Rc<Proposition>>>();
