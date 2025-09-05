@@ -385,6 +385,14 @@ fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 	{
 		out.insert(z.clone());
 	}
+	if let And {
+		left: Implies { left: y, right: z },
+		right: x,
+	} = prop
+		&& x == y
+	{
+		out.insert(z.clone());
+	}
 
 	// Double negation elimination
 	if let Not(Not(x)) = prop {
@@ -408,6 +416,14 @@ fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 	if let And {
 		left: Implies { left: x, right: y },
 		right: Not(z),
+	} = prop
+		&& z == y
+	{
+		out.insert(Rc::new(Not(x.clone())));
+	}
+	if let And {
+		left: Not(z),
+		right: Implies { left: x, right: y },
 	} = prop
 		&& z == y
 	{
