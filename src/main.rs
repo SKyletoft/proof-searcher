@@ -42,7 +42,7 @@ fn main() {
 	proof_search(set1, target)
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct Hypothesis {
 	assumption: Rc<Proposition>,
 	conclusions: Propositions,
@@ -59,7 +59,7 @@ impl Hypothesis {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct SearchNode {
 	premises: Propositions,
 	assumptions: Vec<Hypothesis>,
