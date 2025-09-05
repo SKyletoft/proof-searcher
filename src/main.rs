@@ -196,18 +196,15 @@ fn proof_search(premises: Propositions, target: Proposition) {
 
 		if let Some((assumption, c_cands)) = conclusion_candidates(&node) {
 			let mut new = node.clone();
-			new.assumptions.pop();
+			new.assumptions.pop().unwrap();
 			for cand in c_cands.into_iter() {
 				let mut node = new.clone();
-				let props = node
-					.assumptions
-					.last_mut()
-					.map(|Hypothesis { conclusions, .. }| conclusions)
-					.unwrap_or(&mut node.premises);
-				props.insert(Rc::new(Implies {
+				let implication = Rc::new(Implies {
 					left: assumption.clone(),
 					right: cand,
-				}));
+				});
+				node.last_mut().insert(implication);
+				queue.push_back(node);
 			}
 		}
 
