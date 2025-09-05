@@ -8,7 +8,10 @@ use std::{
 	rc::Rc,
 };
 
-use prop::Proposition::{self, *};
+use prop::{
+	Proposition::{self, *},
+	and, or,
+};
 
 type Propositions = HashSet<Rc<Proposition>>;
 
@@ -21,14 +24,7 @@ fn main() {
 			left: Not(var('s')).into(),
 			right: Not(var('r')).into(),
 		},
-		Or {
-			left: And {
-				left: var('p'),
-				right: var('q'),
-			}
-			.into(),
-			right: var('r'),
-		},
+		or(and(var('p'), var('q')).into(), var('r')),
 		Implies {
 			left: Not(var('s')).into(),
 			right: Not(var('q')).into(),
@@ -211,10 +207,7 @@ fn join(node: &mut SearchNode) -> &mut Propositions {
 			.iter()
 			.flat_map(|Hypothesis { conclusions, .. }| conclusions.iter()),
 	) {
-		last.insert(Rc::new(And {
-			left: new_assumption.clone(),
-			right: known.clone(),
-		}));
+		last.insert(Rc::new(and(new_assumption.clone(), known.clone())));
 	}
 	last
 }
@@ -308,13 +301,7 @@ fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 		right: z,
 	} = prop
 	{
-		out.insert(Rc::new(And {
-			left: x.clone(),
-			right: Rc::new(And {
-				left: y.clone(),
-				right: z.clone(),
-			}),
-		}));
+		out.insert(Rc::new(and(x.clone(), Rc::new(and(y.clone(), z.clone())))));
 	}
 
 	if let And {
@@ -322,13 +309,7 @@ fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 		right: And { left: y, right: z },
 	} = prop
 	{
-		out.insert(Rc::new(And {
-			left: Rc::new(And {
-				left: x.clone(),
-				right: y.clone(),
-			}),
-			right: z.clone(),
-		}));
+		out.insert(Rc::new(and(Rc::new(and(x.clone(), y.clone())), z.clone())));
 	}
 
 	if let Or {
@@ -336,13 +317,7 @@ fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 		right: z,
 	} = prop
 	{
-		out.insert(Rc::new(Or {
-			left: x.clone(),
-			right: Rc::new(Or {
-				left: y.clone(),
-				right: z.clone(),
-			}),
-		}));
+		out.insert(Rc::new(or(x.clone(), Rc::new(or(y.clone(), z.clone())))));
 	}
 
 	if let Or {
@@ -350,31 +325,18 @@ fn single_prop_conclusions(prop: &Proposition) -> HashSet<Rc<Proposition>> {
 		right: Or { left: y, right: z },
 	} = prop
 	{
-		out.insert(Rc::new(Or {
-			left: Rc::new(Or {
-				left: x.clone(),
-				right: y.clone(),
-			}),
-			right: z.clone(),
-		}));
+		out.insert(Rc::new(or(Rc::new(or(x.clone(), y.clone())), z.clone())));
 	}
 
 	// And-elimination + And-reordering
 	if let And { left, right } = prop {
-		out.insert(Rc::new(And {
-			left: right.clone(),
-			right: left.clone(),
-		}));
 		out.insert(left.clone());
 		out.insert(right.clone());
 	}
 
 	// Or-reordering
 	if let Or { left, right } = prop {
-		out.insert(Rc::new(Or {
-			left: right.clone(),
-			right: left.clone(),
-		}));
+		out.insert(Rc::new(or(right.clone(), left.clone())));
 	}
 
 	// Implication-elimination
