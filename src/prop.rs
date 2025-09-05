@@ -1,6 +1,6 @@
 use std::{fmt, rc::Rc};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub enum Proposition {
 	Variable(u8),
 	And {
@@ -19,7 +19,31 @@ pub enum Proposition {
 	Bottom,
 }
 
+pub fn and(x: Rc<Proposition>, y: Rc<Proposition>) -> Proposition {
+	Proposition::and(x, y)
+}
+
+pub fn or(x: Rc<Proposition>, y: Rc<Proposition>) -> Proposition {
+	Proposition::or(x, y)
+}
+
 impl Proposition {
+	fn and(x: Rc<Proposition>, y: Rc<Proposition>) -> Self {
+		if x <= y {
+			Proposition::And { left: x, right: y }
+		} else {
+			Proposition::And { left: y, right: x }
+		}
+	}
+
+	fn or(x: Rc<Proposition>, y: Rc<Proposition>) -> Self {
+		if x <= y {
+			Proposition::Or { left: x, right: y }
+		} else {
+			Proposition::Or { left: y, right: x }
+		}
+	}
+
 	pub fn len(&self) -> usize {
 		match self {
 			Proposition::Bottom => 0,
