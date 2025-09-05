@@ -10,7 +10,7 @@ use std::{
 
 use prop::{
 	Proposition::{self, *},
-	and, or, var
+	and, or, var,
 };
 
 type Propositions = HashSet<Rc<Proposition>>;
