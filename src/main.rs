@@ -1,4 +1,4 @@
-#![allow(incomplete_features)]
+#![allow(incomplete_features, dead_code)]
 #![feature(deref_patterns)]
 
 mod prop;
