@@ -108,10 +108,14 @@ impl SearchNode {
 fn proof_search(premises: Propositions, target: Proposition) {
 	let mut queue = VecDeque::new();
 
-	let premises = deduce(premises);
-	let cands = assumption_candidates(&premises);
+	let mut starting_node = SearchNode {
+		premises,
+		assumptions: Vec::new(),
+	};
+	deduce(&mut starting_node);
+	let cands = assumption_candidates(&starting_node.premises);
 	for cand in cands.into_iter() {
-		let premises = premises.clone();
+		let premises = starting_node.premises.clone();
 		queue.push_back(SearchNode {
 			premises,
 			assumptions: vec![(cand, HashSet::new())],
@@ -148,9 +152,10 @@ fn proof_search(premises: Propositions, target: Proposition) {
 
 		join(&mut node);
 		deduce(&mut node);
+		let last = node.last();
 		let a_cands = assumption_candidates(last);
 		for cand in a_cands.into_iter() {
-			let premises = premises.clone();
+			let premises = node.premises.clone();
 			let mut assumptions = node.assumptions.clone();
 			assumptions.push((cand, HashSet::new()));
 			queue.push_back(SearchNode {
@@ -188,7 +193,7 @@ fn join(node: &mut SearchNode) -> &mut Propositions {
 
 fn deduce(node: &mut SearchNode) {
 	let mut set1;
-	let mut set2 = facts;
+	let mut set2 = node.last().clone();
 
 	loop {
 		let fact_count = set2.len();
@@ -205,7 +210,10 @@ fn deduce(node: &mut SearchNode) {
 		}
 	}
 
-	set2
+	*node.last_mut() = set2
+		.into_iter()
+		.filter(|prop| !node.contains(prop))
+		.collect()
 }
 
 fn assumption_candidates(facts: &HashSet<Rc<Proposition>>) -> Vec<Rc<Proposition>> {
