@@ -203,7 +203,7 @@ fn proof_search(premises: Propositions, target: Proposition) {
 					left: assumption.clone(),
 					right: cand,
 				});
-				node.last_mut().insert(implication);
+				join_implication(&mut node, implication);
 				queue.push_back(node);
 			}
 		}
@@ -220,6 +220,15 @@ fn proof_search(premises: Propositions, target: Proposition) {
 			});
 		}
 	}
+}
+
+fn join_implication(node: &mut SearchNode, new_implication: Rc<Proposition>) -> &mut Propositions {
+	let last = node.last_mut();
+
+	todo!();
+
+	last.insert(new_implication);
+	last
 }
 
 fn join_assumption(node: &mut SearchNode) -> &mut Propositions {
