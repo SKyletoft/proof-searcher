@@ -188,6 +188,9 @@ fn proof_search(premises: Propositions, target: Proposition) {
 			break;
 		}
 
+		join(&mut node);
+		deduce(&mut node);
+
 		if let Some((assumption, c_cands)) = conclusion_candidates(&node) {
 			let mut new = node.clone();
 			new.assumptions.pop();
@@ -205,8 +208,6 @@ fn proof_search(premises: Propositions, target: Proposition) {
 			}
 		}
 
-		join(&mut node);
-		deduce(&mut node);
 		let last = node.last();
 		let a_cands = assumption_candidates(last);
 		for cand in a_cands.into_iter() {
