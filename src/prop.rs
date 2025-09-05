@@ -27,6 +27,10 @@ pub fn or(x: Rc<Proposition>, y: Rc<Proposition>) -> Proposition {
 	Proposition::or(x, y)
 }
 
+pub fn var(c: char) -> Rc<Proposition> {
+	Rc::new(Proposition::Variable(c as u8 - b'a'))
+}
+
 impl Proposition {
 	fn and(x: Rc<Proposition>, y: Rc<Proposition>) -> Self {
 		if x <= y {

@@ -10,7 +10,7 @@ use std::{
 
 use prop::{
 	Proposition::{self, *},
-	and, or,
+	and, or, var
 };
 
 type Propositions = HashSet<Rc<Proposition>>;
@@ -181,10 +181,6 @@ fn proof_search(premises: Propositions, target: Proposition) {
 			});
 		}
 	}
-}
-
-fn var(c: char) -> Rc<Proposition> {
-	Rc::new(Variable(c as u8 - b'a'))
 }
 
 fn join(node: &mut SearchNode) -> &mut Propositions {
