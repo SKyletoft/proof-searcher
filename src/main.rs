@@ -273,8 +273,8 @@ fn deduce(node: &mut SearchNode) {
 
 	*node.last_mut() = set2
 		.into_iter()
-		.filter(|prop| !node.contains(prop))
-		.collect()
+		.filter(|p| !node.contains_except_last(p))
+		.collect();
 }
 
 fn assumption_candidates(facts: &HashSet<Rc<Proposition>>) -> Vec<Rc<Proposition>> {
@@ -317,13 +317,7 @@ fn conclusion_candidates(node: &SearchNode) -> Option<(Rc<Proposition>, Vec<Rc<P
 
 	let mut v = conclusions
 		.iter()
-		.filter(|c| {
-			let c: &Proposition = c;
-			!node.premises.contains(c)
-				&& !node.assumptions[..node.assumptions.len() - 1]
-					.iter()
-					.any(|Hypothesis { conclusions, .. }| conclusions.contains(c))
-		})
+		.filter(|p| node.contains(p) && p != &assumption && !p.is_anded_with(assumption))
 		.cloned()
 		.collect::<Vec<Rc<Proposition>>>();
 	v.sort_unstable_by_key(|p| p.len());
