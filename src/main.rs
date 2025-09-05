@@ -158,7 +158,7 @@ fn proof_search(premises: Propositions, target: Proposition) {
 				let props = node
 					.assumptions
 					.last_mut()
-					.map(|Hypothesis {conclusions, ..}| conclusions)
+					.map(|Hypothesis { conclusions, .. }| conclusions)
 					.unwrap_or(&mut node.premises);
 				props.insert(Rc::new(Implies {
 					left: assumption.clone(),
