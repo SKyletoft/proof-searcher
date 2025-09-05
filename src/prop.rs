@@ -59,6 +59,20 @@ impl Proposition {
 			| Proposition::Implies { left, right } => 1 + left.len() + right.len(),
 		}
 	}
+
+	pub fn is_anded_with(&self, other: &Proposition) -> bool {
+		match self {
+			Proposition::And { left, right }
+				if left.as_ref() == other || right.as_ref() == other =>
+			{
+				true
+			}
+			Proposition::And { left, right } => {
+				left.is_anded_with(other) || right.is_anded_with(other)
+			}
+			_ => false,
+		}
+	}
 }
 
 impl fmt::Display for Proposition {
