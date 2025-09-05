@@ -50,9 +50,11 @@ struct Hypothesis {
 
 impl Hypothesis {
 	fn from_assumption(assumption: Rc<Proposition>) -> Self {
+		let mut conclusions = HashSet::new();
+		conclusions.insert(assumption.clone());
 		Hypothesis {
 			assumption,
-			conclusions: HashSet::new(),
+			conclusions,
 		}
 	}
 }
