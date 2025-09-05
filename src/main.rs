@@ -191,7 +191,7 @@ fn proof_search(premises: Propositions, target: Proposition) {
 			break;
 		}
 
-		join(&mut node);
+		join_assumption(&mut node);
 		deduce(&mut node);
 
 		if let Some((assumption, c_cands)) = conclusion_candidates(&node) {
@@ -222,7 +222,7 @@ fn proof_search(premises: Propositions, target: Proposition) {
 	}
 }
 
-fn join(node: &mut SearchNode) -> &mut Propositions {
+fn join_assumption(node: &mut SearchNode) -> &mut Propositions {
 	if node.assumptions.is_empty() {
 		return &mut node.premises;
 	}
