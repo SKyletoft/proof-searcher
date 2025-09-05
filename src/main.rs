@@ -142,6 +142,9 @@ impl SearchNode {
 	}
 
 	fn contains_except_last(&self, prop: &Proposition) -> bool {
+		if self.assumptions.is_empty() {
+			return false;
+		}
 		!self.premises.contains(prop)
 			&& !self.assumptions[..self.assumptions.len() - 1]
 				.iter()
