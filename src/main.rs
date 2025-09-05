@@ -16,7 +16,7 @@ fn main() {
 	// Target:
 	// ¬s → ¬r, (p ∧ q) ∨ r, ¬s → ¬q |- ¬p ∨ s
 
-	let mut set1 = [
+	let set1 = [
 		Implies {
 			left: Not(var('s')).into(),
 			right: Not(var('r')).into(),
