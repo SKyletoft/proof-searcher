@@ -40,6 +40,44 @@ fn main() {
 	};
 
 	proof_search(set1, target)
+
+	// let mut starting_node = SearchNode {
+	//	premises: [
+	//		Implies {
+	//			left: Not(var('s')).into(),
+	//			right: Not(var('r')).into(),
+	//		},
+	//		or(and(var('p'), var('q')).into(), var('r')),
+	//		Implies {
+	//			left: Not(var('s')).into(),
+	//			right: Not(var('q')).into(),
+	//		},
+	//		Not(var('q')),
+	//	]
+	//	.into_iter()
+	//	.map(Rc::new)
+	//	.collect::<HashSet<_>>(),
+	//	assumptions: vec![Hypothesis {
+	//		assumption: Rc::new(Not(var('s'))),
+	//		conclusions: [Rc::new(Not(var('s')))].into_iter().collect(),
+	//	}],
+	// };
+	// eprintln!("{starting_node}");
+	// join(&mut starting_node);
+	// eprintln!("{starting_node}");
+	// deduce(&mut starting_node);
+	// eprintln!("{starting_node}");
+	// let (a, vs) = conclusion_candidates(&starting_node).unwrap();
+	// eprintln!("Conclusions:");
+	// for v in vs.into_iter() {
+	//	eprintln!(
+	//		"\t{}",
+	//		Implies {
+	//			left: a.clone(),
+	//			right: v
+	//		}
+	//	);
+	// }
 }
 
 #[derive(Debug, Clone)]
